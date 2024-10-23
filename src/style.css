@@ -44,7 +44,7 @@ h1 {
 
 canvas{
   border-radius: 10px;
-  border: 1px solid black;
+  border: 2px solid black;
   position: absolute;
   left: 20%;
 }

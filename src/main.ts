@@ -21,13 +21,16 @@ interface Point{
     x: number,
     y: number
 }
-let p: Point[] = [];
+let p: Point[];
+const q: Point[][] = [];
 const event = new Event("drawing-changed");
 //Observer function for "drawing-changed"
 function draw(){
-    const p1 = p[p.length - 1];
-    const p2 = p[p.length - 2];
-    drawLine(ctx, p1.x, p1.y, p2.x, p2.y);
+    isDrawing = false;  
+    if(p){
+        q.push(p);
+    }
+    console.log(q);
 }
 canvas.addEventListener('drawing-changed', draw)
 
@@ -35,24 +38,27 @@ let isDrawing = false;
 
 canvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
+    p = [];
     p.push({x:e.offsetX, y:e.offsetY});
 })
 canvas.addEventListener("mousemove", (e) => {
     if (isDrawing) {
-      p.push({x:e.offsetX, y:e.offsetY});
-      canvas.dispatchEvent(event);
+        const p1 = {x:e.offsetX, y:e.offsetY};
+        const p2 = p[p.length - 1];
+        drawLine(ctx, p1.x, p1.y, p2.x, p2.y);
+        p.push(p1);
     }
   });
 
   
-globalThis.addEventListener("mouseup", (e) => {
+globalThis.addEventListener("mouseup", function() {
     if (isDrawing) {
-      isDrawing = false;
+        canvas.dispatchEvent(event);
     }
 });
   
 function drawLine(ctx:CanvasRenderingContext2D|null, x1:number, y1:number, x2:number, y2:number) {
-    if (ctx != null){
+    if (ctx){
         ctx.beginPath();
         ctx.strokeStyle = "black";
         ctx.lineWidth = 1;
@@ -64,9 +70,19 @@ function drawLine(ctx:CanvasRenderingContext2D|null, x1:number, y1:number, x2:nu
 }
 const b1 = document.createElement("button");
 b1.className = "button";
-b1.textContent = "Clear";
+b1.textContent = "clear";
 app.append(b1);
 b1.addEventListener("click", function () {
     blank(ctx);
     p = [];
 });
+
+const b2 = document.createElement("button");
+b2.className = "button";
+b2.textContent = "undo";
+app.append(b2);
+
+const b3 = document.createElement("button");
+b3.className = "button";
+b3.textContent = "redo";
+app.append(b3);
