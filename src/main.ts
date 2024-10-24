@@ -7,32 +7,46 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 document.title = APP_NAME;
 title.innerHTML = APP_NAME;
 
+//Start with a blank canvas
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
 function blank(ctx:CanvasRenderingContext2D|null){
     if(ctx){
+        ctx.clearRect(0, 0, 256, 256);
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, 256, 256);
     }
 }
 blank(ctx);
 
+//Taking User's mouse input and drawing
 interface Point{
     x: number,
     y: number
 }
-let p: Point[];
-const q: Point[][] = [];
+let p: Point[] = [];
+let q: Point[][] = [];
 const event = new Event("drawing-changed");
+
 //Observer function for "drawing-changed"
-function draw(){
-    isDrawing = false;  
-    if(p){
-        q.push(p);
+function redraw(){
+    blank(ctx)
+    if(ctx){
+        ctx.strokeStyle = "black";
+        for(const line of q){
+            if(line.length > 1){
+                ctx.beginPath();
+                ctx.moveTo(line[0].x, line[0].y);
+                for (const point of line) {
+                    ctx.lineTo(point.x, point.y);
+                }
+                ctx.stroke();
+                ctx.closePath();
+            }
+        }
     }
-    console.log(q);
 }
-canvas.addEventListener('drawing-changed', draw)
+canvas.addEventListener('drawing-changed', redraw);
 
 let isDrawing = false;
 
@@ -40,41 +54,30 @@ canvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
     p = [];
     p.push({x:e.offsetX, y:e.offsetY});
+    q.push(p);
 })
 canvas.addEventListener("mousemove", (e) => {
     if (isDrawing) {
-        const p1 = {x:e.offsetX, y:e.offsetY};
-        const p2 = p[p.length - 1];
-        drawLine(ctx, p1.x, p1.y, p2.x, p2.y);
-        p.push(p1);
+        p.push({x:e.offsetX, y:e.offsetY});
+        canvas.dispatchEvent(event);
     }
   });
 
-  
 globalThis.addEventListener("mouseup", function() {
     if (isDrawing) {
-        canvas.dispatchEvent(event);
+        isDrawing = false;
+        console.log(q);
     }
 });
-  
-function drawLine(ctx:CanvasRenderingContext2D|null, x1:number, y1:number, x2:number, y2:number) {
-    if (ctx){
-        ctx.beginPath();
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 1;
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-        ctx.closePath();
-    }
-}
+
+//Adding Clear Button, Erases all user input points and lines
 const b1 = document.createElement("button");
 b1.className = "button";
 b1.textContent = "clear";
 app.append(b1);
 b1.addEventListener("click", function () {
     blank(ctx);
-    p = [];
+    q = [];
 });
 
 const b2 = document.createElement("button");
