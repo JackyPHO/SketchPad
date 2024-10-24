@@ -26,6 +26,8 @@ interface Point{
 }
 let p: Point[] = [];
 let q: Point[][] = [];
+let qq: Point[][] = [];
+
 const event = new Event("drawing-changed");
 
 //Observer function for "drawing-changed"
@@ -73,19 +75,38 @@ globalThis.addEventListener("mouseup", function() {
 //Adding Clear Button, Erases all user input points and lines
 const b1 = document.createElement("button");
 b1.className = "button";
-b1.textContent = "clear";
+b1.textContent = "Clear";
 app.append(b1);
 b1.addEventListener("click", function () {
     blank(ctx);
     q = [];
+    qq = [];
 });
 
 const b2 = document.createElement("button");
 b2.className = "button";
-b2.textContent = "undo";
+b2.textContent = "Undo";
 app.append(b2);
+b2.addEventListener("click", function () {
+    if(q.length > 0){
+        const redoline: Point[] | undefined = q.pop();
+        if(redoline){
+            qq.push(redoline);
+        }
+        canvas.dispatchEvent(event);
+    }
+});
 
 const b3 = document.createElement("button");
 b3.className = "button";
-b3.textContent = "redo";
+b3.textContent = "Redo";
 app.append(b3);
+b3.addEventListener("click", function () {
+    if(qq.length > 0){
+        const redoline: Point[] | undefined = qq.pop();
+        if(redoline){
+            q.push(redoline);
+        }
+        canvas.dispatchEvent(event);
+    }
+});
