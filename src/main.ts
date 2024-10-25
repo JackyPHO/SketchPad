@@ -19,14 +19,10 @@ function blank(ctx:CanvasRenderingContext2D|null){
 }
 blank(ctx);
 
-//Taking User's mouse input and drawing
-interface Point{
-    x: number,
-    y: number
-}
 let p: MarkerLine | null = null;
 let q: Displayable[] = [];
 let qq: Displayable[] = [];
+let z = 2;
 
 const event = new Event("drawing-changed");
 
@@ -47,7 +43,7 @@ let isDrawing = false;
 
 canvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
-    p = new MarkerLine(e.offsetX,e.offsetY);
+    p = new MarkerLine(e.offsetX,e.offsetY,z);
     q.push(p);
 })
 canvas.addEventListener("mousemove", (e) => {
@@ -65,12 +61,16 @@ globalThis.addEventListener("mouseup", function() {
     }
 });
 
-//Adding Clear Button, Erases all user input points and lines
-const b1 = document.createElement("button");
-b1.className = "button";
-b1.textContent = "Clear";
-app.append(b1);
-b1.addEventListener("click", function () {
+function newButton(name:string){
+    const b = document.createElement("button");
+    b.className = "button";
+    b.textContent = name;
+    app.append(b)
+    return b;
+}
+
+const clearButton = newButton("Clear")
+clearButton.addEventListener("click", function () {
     blank(ctx);
     q = [];
     qq = [];
@@ -81,34 +81,34 @@ interface Displayable {
 }
 class MarkerLine implements Displayable{
     private points: { x: number, y: number }[];
+    private width: number;
 
-    constructor(initialX: number, initialY: number) {
+    constructor(initialX: number, initialY: number, initialWidth: number=2) {
         this.points = [{ x: initialX, y: initialY }];
+        this.width = initialWidth;
     }
 
-    // Adds a new point to extend the line
     drag(x: number, y: number): void {
         this.points.push({ x, y });
     }
 
-    // Implements the display method
     display(context: CanvasRenderingContext2D): void {
         if (this.points.length > 1) {
+            context.save;
+            context.lineWidth = this.width;
             context.beginPath();
             for (let i = 0; i < this.points.length - 1; i++) {
                 context.moveTo(this.points[i].x, this.points[i].y);
                 context.lineTo(this.points[i + 1].x, this.points[i + 1].y);
             }
             context.stroke();
+            context.restore();
         }
     }
 }
 
-const b2 = document.createElement("button");
-b2.className = "button";
-b2.textContent = "Undo";
-app.append(b2);
-b2.addEventListener("click", function () {
+const undoButton = newButton("Undo");
+undoButton.addEventListener("click", function () {
     if(q.length > 0){
         const redoline = q.pop();
         if(redoline){
@@ -118,11 +118,8 @@ b2.addEventListener("click", function () {
     }
 });
 
-const b3 = document.createElement("button");
-b3.className = "button";
-b3.textContent = "Redo";
-app.append(b3);
-b3.addEventListener("click", function () {
+const redoButton = newButton("Redo");
+redoButton.addEventListener("click", function () {
     if(qq.length > 0){
         const redoline = qq.pop();
         if(redoline){
@@ -130,4 +127,13 @@ b3.addEventListener("click", function () {
         }
         canvas.dispatchEvent(event);
     }
+});
+
+const thinButton = newButton("Thin");
+thinButton.addEventListener("click", function () {
+    z = 2;
+});
+const thickButton = newButton("Thick");
+thickButton.addEventListener("click", function () {
+    z = 5;
 });
