@@ -24,9 +24,9 @@ interface Point{
     x: number,
     y: number
 }
-let p: Point[] = [];
-let q: Point[][] = [];
-let qq: Point[][] = [];
+let p: MarkerLine | null = null;
+let q: Displayable[] = [];
+let qq: Displayable[] = [];
 
 const event = new Event("drawing-changed");
 
@@ -36,39 +36,32 @@ function redraw(){
     if(ctx){
         ctx.strokeStyle = "black";
         for(const line of q){
-            if(line.length > 1){
-                ctx.beginPath();
-                ctx.moveTo(line[0].x, line[0].y);
-                for (const point of line) {
-                    ctx.lineTo(point.x, point.y);
-                }
-                ctx.stroke();
-                ctx.closePath();
-            }
+            line.display(ctx);
         }
     }
 }
+
 canvas.addEventListener('drawing-changed', redraw);
 
 let isDrawing = false;
 
 canvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
-    p = [];
-    p.push({x:e.offsetX, y:e.offsetY});
+    p = new MarkerLine(e.offsetX,e.offsetY);
     q.push(p);
 })
 canvas.addEventListener("mousemove", (e) => {
     if (isDrawing) {
-        p.push({x:e.offsetX, y:e.offsetY});
-        canvas.dispatchEvent(event);
+        if(p){
+            p.drag(e.offsetX,e.offsetY);
+            canvas.dispatchEvent(event);
+        }
     }
   });
 
 globalThis.addEventListener("mouseup", function() {
     if (isDrawing) {
         isDrawing = false;
-        console.log(q);
     }
 });
 
@@ -83,13 +76,41 @@ b1.addEventListener("click", function () {
     qq = [];
 });
 
+interface Displayable {
+    display(context: CanvasRenderingContext2D): void;
+}
+class MarkerLine implements Displayable{
+    private points: { x: number, y: number }[];
+
+    constructor(initialX: number, initialY: number) {
+        this.points = [{ x: initialX, y: initialY }];
+    }
+
+    // Adds a new point to extend the line
+    drag(x: number, y: number): void {
+        this.points.push({ x, y });
+    }
+
+    // Implements the display method
+    display(context: CanvasRenderingContext2D): void {
+        if (this.points.length > 1) {
+            context.beginPath();
+            for (let i = 0; i < this.points.length - 1; i++) {
+                context.moveTo(this.points[i].x, this.points[i].y);
+                context.lineTo(this.points[i + 1].x, this.points[i + 1].y);
+            }
+            context.stroke();
+        }
+    }
+}
+
 const b2 = document.createElement("button");
 b2.className = "button";
 b2.textContent = "Undo";
 app.append(b2);
 b2.addEventListener("click", function () {
     if(q.length > 0){
-        const redoline: Point[] | undefined = q.pop();
+        const redoline = q.pop();
         if(redoline){
             qq.push(redoline);
         }
@@ -103,7 +124,7 @@ b3.textContent = "Redo";
 app.append(b3);
 b3.addEventListener("click", function () {
     if(qq.length > 0){
-        const redoline: Point[] | undefined = qq.pop();
+        const redoline = qq.pop();
         if(redoline){
             q.push(redoline);
         }
