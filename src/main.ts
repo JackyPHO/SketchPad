@@ -10,6 +10,7 @@ title.innerHTML = APP_NAME;
 //Start with a blank canvas
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
+canvas.style.cursor = "none";
 function blank(ctx:CanvasRenderingContext2D|null){
     if(ctx){
         ctx.clearRect(0, 0, 256, 256);
@@ -23,10 +24,11 @@ let p: MarkerLine | null = null;
 let q: Displayable[] = [];
 let qq: Displayable[] = [];
 let z = 2;
+let c: cursorCommand | null = null;
 
 const event = new Event("drawing-changed");
+const event1 = new Event("tool-moved");
 
-//Observer function for "drawing-changed"
 function redraw(){
     blank(ctx)
     if(ctx){
@@ -35,15 +37,35 @@ function redraw(){
             line.display(ctx);
         }
     }
+    if(cursorCommand){
+        if(c)
+            c.execute();
+    }
 }
 
 canvas.addEventListener('drawing-changed', redraw);
+canvas.addEventListener('tool-moved', redraw);
+
+class cursorCommand {
+    private point: { x: number, y: number }; 
+    constructor(x:number, y:number) {
+        this.point = {x, y}
+      }
+    execute() {
+        if (ctx){        
+            ctx.font = "32px monospace";
+            ctx.fillStyle = "black";
+            ctx.fillText("*", this.point.x - 8, this.point.y + 16);
+        }
+    }
+}
 
 let isDrawing = false;
 
 canvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
     p = new MarkerLine(e.offsetX,e.offsetY,z);
+    c = new cursorCommand(e.offsetX, e.offsetY);
     q.push(p);
 })
 canvas.addEventListener("mousemove", (e) => {
@@ -53,7 +75,13 @@ canvas.addEventListener("mousemove", (e) => {
             canvas.dispatchEvent(event);
         }
     }
+    c = new cursorCommand(e.offsetX, e.offsetY);
+    canvas.dispatchEvent(event1);
   });
+canvas.addEventListener("mouseout", function(){
+    c = null;
+    canvas.dispatchEvent(event1);
+});
 
 globalThis.addEventListener("mouseup", function() {
     if (isDrawing) {
