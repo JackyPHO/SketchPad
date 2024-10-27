@@ -178,16 +178,29 @@ thickButton.addEventListener("click", function () {
     cursor = "*";
     thickness = 5;
 });
+
 interface Emoji{
     symbol: string;
 }
 const emojiList: Emoji[] = [
-    {symbol: "😍"},{symbol: "🌼"},{symbol: "🍜"}
+    {symbol: "😍"},
+    {symbol: "🌼"},
+    {symbol: "🍜"}
 ];
-for (const items of emojiList){
-    const emojiButton = newButton(items.symbol);
+function newEmoji(name:string){
+    const emojiButton = newButton(name);
     emojiButton.addEventListener("click", function () {
-        cursor = items.symbol;
-        canvas.dispatchEvent(event2);
+        cursor = name;
+        canvas.dispatchEvent(event2)
     });
+}
+const customButton = newButton("Custom");
+customButton.addEventListener("click", function () {
+    const customEmoji = prompt("Enter a Custom Emoji");
+    if(customEmoji){
+        emojiList.push({symbol:customEmoji})
+        newEmoji(customEmoji);
+    }});
+for (const items of emojiList){
+    newEmoji(items.symbol);
 }
