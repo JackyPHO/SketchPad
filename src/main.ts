@@ -7,7 +7,10 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 document.title = APP_NAME;
 title.innerHTML = APP_NAME;
 
-const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+const canvas = document.createElement('canvas') as HTMLCanvasElement;
+canvas.width = 256;
+canvas.height = 256;
+app.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 canvas.style.cursor = "none";
 
@@ -29,13 +32,17 @@ let cursor = "*";
 const event1 = new Event("drawing-changed");
 const event2 = new Event("tool-moved");
 
+function draw(context:CanvasRenderingContext2D|null): void{
+    if (context){
+        for(const object of displayList){
+            object.display(context);
+        }
+    }
+}
 function redraw(){
     if(ctx){
-        blank(ctx)
-        ctx.strokeStyle = "black";
-        for(const object of displayList){
-            object.display(ctx);
-        }
+        blank(ctx);
+        draw(ctx);
     }
 }
 
@@ -61,6 +68,7 @@ class MarkerLine implements Displayable{
     display(context: CanvasRenderingContext2D): void {
         if (this.points.length > 1) {
             context.save;
+            context.strokeStyle = "black";
             context.lineWidth = this.width;
             context.beginPath();
             for (let i = 0; i < this.points.length - 1; i++) {
@@ -132,7 +140,6 @@ app.appendChild(buttonGrid);
 
 function newButton(name:string){
     const button = document.createElement("button");
-    button.className = "button";
     button.textContent = name;
     buttonGrid.appendChild(button);
     return button;
@@ -200,7 +207,30 @@ customButton.addEventListener("click", function () {
     if(customEmoji){
         emojiList.push({symbol:customEmoji})
         newEmoji(customEmoji);
-    }});
+    }
+});
 for (const items of emojiList){
     newEmoji(items.symbol);
 }
+
+const exportUI = document.querySelector<HTMLDivElement>("#export")!;
+const exportButton = document.createElement("button");
+exportButton.textContent = "Export";
+exportUI.append(exportButton);
+exportButton.addEventListener("click", function () {
+    const newImage = document.createElement('canvas') as HTMLCanvasElement;
+    newImage.width = 1024;
+    newImage.height = 1024;
+    const tempCTX = newImage.getContext('2d');
+    if(tempCTX){
+        tempCTX.fillStyle = 'white';
+        tempCTX.fillRect(0, 0, 1024, 1024);
+        tempCTX.scale(4, 4);
+        draw(tempCTX);
+        tempCTX.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    const anchor = document.createElement("a");
+    anchor.href = newImage.toDataURL("image/png");
+    anchor.download = "sketchpad.png";
+    anchor.click();
+});
