@@ -23,7 +23,7 @@ blank(ctx);
 let currentLine: MarkerLine | null = null;
 let displayList: Displayable[] = [];
 let redoStack: Displayable[] = [];
-let thickness = 3;
+let thickness = 2;
 let cursor = "*";
 
 const event1 = new Event("drawing-changed");
@@ -80,13 +80,31 @@ function cursorCommand(cursor:string, mouseX:number, mouseY:number){
         ctx.fillText(cursor, mouseX - 8, mouseY + 16);
     }
 }
+function stickerCommand (cursor:string, mouseX:number, mouseY:number){
+    const display = (context: CanvasRenderingContext2D): void =>{
+        if (context){
+            context.font = "32px monospace";
+            context.fillStyle = "red";
+            context.fillText(cursor, mouseX - 8, mouseY + 16);
+        }
+    };
+    return {display};
+}
 
 let isDrawing = false;
 
 canvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
     currentLine = new MarkerLine(e.offsetX,e.offsetY,thickness);
-    displayList.push(currentLine);
+    if(cursor != "*"){
+        const sticker = stickerCommand(cursor,e.offsetX, e.offsetY)
+        displayList.push(sticker);
+        console.log("sticker");
+    }
+    else{
+        currentLine = new MarkerLine(e.offsetX,e.offsetY,thickness);
+        displayList.push(currentLine);
+    }
 })
 canvas.addEventListener("mousemove", (e) => {
     if (isDrawing) {
@@ -152,9 +170,24 @@ redoButton.addEventListener("click", function () {
 
 const thinButton = newButton("Thin");
 thinButton.addEventListener("click", function () {
+    cursor = "*";
     thickness = 2;
 });
 const thickButton = newButton("Thick");
 thickButton.addEventListener("click", function () {
+    cursor = "*";
     thickness = 5;
 });
+interface Emoji{
+    symbol: string;
+}
+const emojiList: Emoji[] = [
+    {symbol: "😍"},{symbol: "🌼"},{symbol: "🍜"}
+];
+for (const items of emojiList){
+    const emojiButton = newButton(items.symbol);
+    emojiButton.addEventListener("click", function () {
+        cursor = items.symbol;
+        canvas.dispatchEvent(event2);
+    });
+}
