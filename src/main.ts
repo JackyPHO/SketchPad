@@ -7,10 +7,10 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 document.title = APP_NAME;
 title.innerHTML = APP_NAME;
 
-//Start with a blank canvas
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
 canvas.style.cursor = "none";
+
 function blank(ctx:CanvasRenderingContext2D|null){
     if(ctx){
         ctx.clearRect(0, 0, 256, 256);
@@ -20,89 +20,27 @@ function blank(ctx:CanvasRenderingContext2D|null){
 }
 blank(ctx);
 
-let p: MarkerLine | null = null;
-let q: Displayable[] = [];
-let qq: Displayable[] = [];
-let z = 2;
-let c: cursorCommand | null = null;
+let currentLine: MarkerLine | null = null;
+let displayList: Displayable[] = [];
+let redoStack: Displayable[] = [];
+let thickness = 3;
+let cursor = "*";
 
-const event = new Event("drawing-changed");
-const event1 = new Event("tool-moved");
+const event1 = new Event("drawing-changed");
+const event2 = new Event("tool-moved");
 
 function redraw(){
-    blank(ctx)
     if(ctx){
+        blank(ctx)
         ctx.strokeStyle = "black";
-        for(const line of q){
-            line.display(ctx);
+        for(const object of displayList){
+            object.display(ctx);
         }
-    }
-    if(cursorCommand){
-        if(c)
-            c.execute();
     }
 }
 
 canvas.addEventListener('drawing-changed', redraw);
 canvas.addEventListener('tool-moved', redraw);
-
-class cursorCommand {
-    private point: { x: number, y: number }; 
-    constructor(x:number, y:number) {
-        this.point = {x, y}
-      }
-    execute() {
-        if (ctx){        
-            ctx.font = "32px monospace";
-            ctx.fillStyle = "black";
-            ctx.fillText("*", this.point.x - 8, this.point.y + 16);
-        }
-    }
-}
-
-let isDrawing = false;
-
-canvas.addEventListener("mousedown", (e) => {
-    isDrawing = true;
-    p = new MarkerLine(e.offsetX,e.offsetY,z);
-    c = new cursorCommand(e.offsetX, e.offsetY);
-    q.push(p);
-})
-canvas.addEventListener("mousemove", (e) => {
-    if (isDrawing) {
-        if(p){
-            p.drag(e.offsetX,e.offsetY);
-            canvas.dispatchEvent(event);
-        }
-    }
-    c = new cursorCommand(e.offsetX, e.offsetY);
-    canvas.dispatchEvent(event1);
-  });
-canvas.addEventListener("mouseout", function(){
-    c = null;
-    canvas.dispatchEvent(event1);
-});
-
-globalThis.addEventListener("mouseup", function() {
-    if (isDrawing) {
-        isDrawing = false;
-    }
-});
-
-function newButton(name:string){
-    const b = document.createElement("button");
-    b.className = "button";
-    b.textContent = name;
-    app.append(b)
-    return b;
-}
-
-const clearButton = newButton("Clear")
-clearButton.addEventListener("click", function () {
-    blank(ctx);
-    q = [];
-    qq = [];
-});
 
 interface Displayable {
     display(context: CanvasRenderingContext2D): void;
@@ -135,33 +73,88 @@ class MarkerLine implements Displayable{
     }
 }
 
+function cursorCommand(cursor:string, mouseX:number, mouseY:number){
+    if(ctx){
+        ctx.font = "32px monospace";
+        ctx.fillStyle = "red";
+        ctx.fillText(cursor, mouseX - 8, mouseY + 16);
+    }
+}
+
+let isDrawing = false;
+
+canvas.addEventListener("mousedown", (e) => {
+    isDrawing = true;
+    currentLine = new MarkerLine(e.offsetX,e.offsetY,thickness);
+    displayList.push(currentLine);
+})
+canvas.addEventListener("mousemove", (e) => {
+    if (isDrawing) {
+        if(currentLine){
+            currentLine.drag(e.offsetX,e.offsetY);
+            canvas.dispatchEvent(event1);
+        }
+    }
+    canvas.dispatchEvent(event2);
+    cursorCommand(cursor,e.offsetX, e.offsetY);
+  });
+canvas.addEventListener("mouseout", function(){
+    canvas.dispatchEvent(event2);
+});
+
+globalThis.addEventListener("mouseup", function() {
+    if (isDrawing) {
+        isDrawing = false;
+    }
+});
+
+const buttonGrid = document.createElement('div');
+buttonGrid.className = 'button-grid';
+app.appendChild(buttonGrid);
+
+function newButton(name:string){
+    const button = document.createElement("button");
+    button.className = "button";
+    button.textContent = name;
+    buttonGrid.appendChild(button);
+    return button;
+}
+
+const clearButton = newButton("Clear")
+clearButton.addEventListener("click", function () {
+    blank(ctx);
+    displayList = [];
+    redoStack = [];
+    cursor = "*";
+});
+
 const undoButton = newButton("Undo");
 undoButton.addEventListener("click", function () {
-    if(q.length > 0){
-        const redoline = q.pop();
+    if(displayList.length > 0){
+        const redoline = displayList.pop();
         if(redoline){
-            qq.push(redoline);
+            redoStack.push(redoline);
         }
-        canvas.dispatchEvent(event);
+        canvas.dispatchEvent(event1);
     }
 });
 
 const redoButton = newButton("Redo");
 redoButton.addEventListener("click", function () {
-    if(qq.length > 0){
-        const redoline = qq.pop();
+    if(redoStack.length > 0){
+        const redoline = redoStack.pop();
         if(redoline){
-            q.push(redoline);
+            displayList.push(redoline);
         }
-        canvas.dispatchEvent(event);
+        canvas.dispatchEvent(event1);
     }
 });
 
 const thinButton = newButton("Thin");
 thinButton.addEventListener("click", function () {
-    z = 2;
+    thickness = 2;
 });
 const thickButton = newButton("Thick");
 thickButton.addEventListener("click", function () {
-    z = 5;
+    thickness = 5;
 });

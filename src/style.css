@@ -83,6 +83,11 @@ button {
 button:hover {
   border-color: #646cff;
 }
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
