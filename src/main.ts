@@ -3,6 +3,26 @@ import "./style.css";
 const APP_NAME = "SketchPad";
 const title = document.querySelector<HTMLDivElement>("h1")!;
 const app = document.querySelector<HTMLDivElement>("#app")!;
+const colorSelector = document.getElementById("color") as HTMLInputElement;
+const lightSelector = document.getElementById("light") as HTMLInputElement;
+const colorBox = document.querySelector('.color-box') as HTMLElement;
+let color : string;
+function selectColor(Selector:HTMLElement){
+    if (Selector) {
+        Selector.addEventListener('input', function () {
+            const hueValue = colorSelector.value;
+            const lightValue = lightSelector.value;
+            const colorValue = `hsl(${hueValue}, 100%, ${lightValue}%)`
+            document.documentElement.style.setProperty('--dynamic-color', colorValue);
+            if (colorBox) {
+                colorBox.style.backgroundColor = colorValue;
+                color = colorBox.style.backgroundColor 
+            }
+        });
+    }
+}
+selectColor(colorSelector);
+selectColor(lightSelector);
 
 document.title = APP_NAME;
 title.innerHTML = APP_NAME;
@@ -55,10 +75,12 @@ interface Displayable {
 class MarkerLine implements Displayable{
     private points: { x: number, y: number }[];
     private width: number;
+    private color: string;
 
-    constructor(initialX: number, initialY: number, initialWidth: number=2) {
+    constructor(initialX: number, initialY: number, initialWidth: number=2, color:string) {
         this.points = [{ x: initialX, y: initialY }];
         this.width = initialWidth;
+        this.color = color;
     }
 
     drag(x: number, y: number): void {
@@ -68,7 +90,7 @@ class MarkerLine implements Displayable{
     display(context: CanvasRenderingContext2D): void {
         if (this.points.length > 2) {
             context.save();
-            context.strokeStyle = "black";
+            context.strokeStyle = this.color;
             context.lineWidth = this.width;
             context.beginPath();
             context.moveTo(this.points[0].x, this.points[0].y);
@@ -113,14 +135,12 @@ let isDrawing = false;
 
 canvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
-    currentLine = new MarkerLine(e.offsetX,e.offsetY,thickness);
+    currentLine = new MarkerLine(e.offsetX,e.offsetY,thickness,color)
+    const sticker = stickerCommand(cursor,e.offsetX, e.offsetY)
     if(cursor != "🖋️" && cursor !="🖌️"){
-        const sticker = stickerCommand(cursor,e.offsetX, e.offsetY)
         displayList.push(sticker);
-        console.log("sticker");
     }
     else{
-        currentLine = new MarkerLine(e.offsetX,e.offsetY,thickness);
         displayList.push(currentLine);
     }
 })
