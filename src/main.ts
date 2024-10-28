@@ -27,7 +27,7 @@ let currentLine: MarkerLine | null = null;
 let displayList: Displayable[] = [];
 let redoStack: Displayable[] = [];
 let thickness = 2;
-let cursor = "*";
+let cursor = "🖋️";
 
 const event1 = new Event("drawing-changed");
 const event2 = new Event("tool-moved");
@@ -66,15 +66,26 @@ class MarkerLine implements Displayable{
     }
 
     display(context: CanvasRenderingContext2D): void {
-        if (this.points.length > 1) {
-            context.save;
+        if (this.points.length > 2) {
+            context.save();
             context.strokeStyle = "black";
             context.lineWidth = this.width;
             context.beginPath();
-            for (let i = 0; i < this.points.length - 1; i++) {
-                context.moveTo(this.points[i].x, this.points[i].y);
-                context.lineTo(this.points[i + 1].x, this.points[i + 1].y);
+            context.moveTo(this.points[0].x, this.points[0].y);
+            for (let i = 1; i < this.points.length - 1; i++) {
+                const midPoint = {
+                    x: (this.points[i].x + this.points[i + 1].x) / 2,
+                    y: (this.points[i].y + this.points[i + 1].y) / 2
+                };
+                context.quadraticCurveTo(
+                    this.points[i].x,
+                    this.points[i].y,
+                    midPoint.x,
+                    midPoint.y
+                );
             }
+            const lastPoint = this.points.length - 1;
+            context.lineTo(this.points[lastPoint].x, this.points[lastPoint].y);
             context.stroke();
             context.restore();
         }
@@ -83,17 +94,16 @@ class MarkerLine implements Displayable{
 
 function cursorCommand(cursor:string, mouseX:number, mouseY:number){
     if(ctx){
-        ctx.font = "32px monospace";
+        ctx.font = "16px monospace";
         ctx.fillStyle = "red";
-        ctx.fillText(cursor, mouseX - 8, mouseY + 16);
+        ctx.fillText(cursor, mouseX, mouseY);
     }
 }
 function stickerCommand (cursor:string, mouseX:number, mouseY:number){
     const display = (context: CanvasRenderingContext2D): void =>{
         if (context){
-            context.font = "32px monospace";
-            context.fillStyle = "red";
-            context.fillText(cursor, mouseX - 8, mouseY + 16);
+            context.font = "16px monospace";
+            context.fillText(cursor, mouseX, mouseY);
         }
     };
     return {display};
@@ -104,7 +114,7 @@ let isDrawing = false;
 canvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
     currentLine = new MarkerLine(e.offsetX,e.offsetY,thickness);
-    if(cursor != "*"){
+    if(cursor != "🖋️" && cursor !="🖌️"){
         const sticker = stickerCommand(cursor,e.offsetX, e.offsetY)
         displayList.push(sticker);
         console.log("sticker");
@@ -150,7 +160,7 @@ clearButton.addEventListener("click", function () {
     blank(ctx);
     displayList = [];
     redoStack = [];
-    cursor = "*";
+    cursor = "🖋️";
 });
 
 const undoButton = newButton("Undo");
@@ -175,24 +185,24 @@ redoButton.addEventListener("click", function () {
     }
 });
 
-const thinButton = newButton("Thin");
+const thinButton = newButton("🖋️");
 thinButton.addEventListener("click", function () {
-    cursor = "*";
+    cursor = "🖋️";
     thickness = 2;
 });
-const thickButton = newButton("Thick");
+const thickButton = newButton("🖌️");
 thickButton.addEventListener("click", function () {
-    cursor = "*";
-    thickness = 5;
+    cursor = "🖌️";
+    thickness = 4;
 });
 
 interface Emoji{
     symbol: string;
 }
 const emojiList: Emoji[] = [
-    {symbol: "😍"},
-    {symbol: "🌼"},
-    {symbol: "🍜"}
+    {symbol: "❤️"},
+    {symbol: "😊"},
+    {symbol: "🧁"}
 ];
 function newEmoji(name:string){
     const emojiButton = newButton(name);
