@@ -6,7 +6,7 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 const colorSelector = document.getElementById("color") as HTMLInputElement;
 const lightSelector = document.getElementById("light") as HTMLInputElement;
 const colorBox = document.querySelector('.color-box') as HTMLElement;
-let color : string;
+let defaultColor : string = 'black';
 function selectColor(Selector:HTMLElement){
     if (Selector) {
         Selector.addEventListener('input', function () {
@@ -16,7 +16,7 @@ function selectColor(Selector:HTMLElement){
             document.documentElement.style.setProperty('--dynamic-color', colorValue);
             if (colorBox) {
                 colorBox.style.backgroundColor = colorValue;
-                color = colorBox.style.backgroundColor 
+                defaultColor = colorBox.style.backgroundColor;
             }
         });
     }
@@ -114,17 +114,18 @@ class MarkerLine implements Displayable{
     }
 }
 
-function cursorCommand(cursor:string, mouseX:number, mouseY:number){
+function cursorCommand(cursor:string, mouseX:number, mouseY:number, color:string){
     if(ctx){
         ctx.font = "16px monospace";
-        ctx.fillStyle = "red";
+        ctx.fillStyle = color;
         ctx.fillText(cursor, mouseX, mouseY);
     }
 }
-function stickerCommand (cursor:string, mouseX:number, mouseY:number){
+function stickerCommand (cursor:string, mouseX:number, mouseY:number, color:string){
     const display = (context: CanvasRenderingContext2D): void =>{
         if (context){
             context.font = "16px monospace";
+            context.fillStyle = color;
             context.fillText(cursor, mouseX, mouseY);
         }
     };
@@ -135,8 +136,8 @@ let isDrawing = false;
 
 canvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
-    currentLine = new MarkerLine(e.offsetX,e.offsetY,thickness,color)
-    const sticker = stickerCommand(cursor,e.offsetX, e.offsetY)
+    currentLine = new MarkerLine(e.offsetX,e.offsetY,thickness,defaultColor);
+    const sticker = stickerCommand(cursor,e.offsetX, e.offsetY,defaultColor);
     if(cursor != "🖋️" && cursor !="🖌️"){
         displayList.push(sticker);
     }
@@ -152,7 +153,7 @@ canvas.addEventListener("mousemove", (e) => {
         }
     }
     canvas.dispatchEvent(event2);
-    cursorCommand(cursor,e.offsetX, e.offsetY);
+    cursorCommand(cursor,e.offsetX, e.offsetY,defaultColor);
   });
 canvas.addEventListener("mouseout", function(){
     canvas.dispatchEvent(event2);
