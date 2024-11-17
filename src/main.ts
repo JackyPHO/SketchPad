@@ -185,27 +185,20 @@ clearButton.addEventListener("click", function () {
 });
 
 const undoButton = newButton("Undo");
-undoButton.addEventListener("click", function () {
-    if(displayList.length > 0){
-        const redoline = displayList.pop();
-        if(redoline){
-            redoStack.push(redoline);
-        }
-        canvas.dispatchEvent(event1);
-    }
-});
-
 const redoButton = newButton("Redo");
-redoButton.addEventListener("click", function () {
-    if(redoStack.length > 0){
-        const redoline = redoStack.pop();
-        if(redoline){
-            displayList.push(redoline);
-        }
-        canvas.dispatchEvent(event1);
-    }
-});
-
+function buttonEvent(button: HTMLButtonElement, display: Displayable[], display2: Displayable[]){
+    button.addEventListener("click", function () {
+        if(display.length > 0){
+            const newLine = display.pop();
+            if(newLine){
+                display2.push(newLine);
+            }
+            canvas.dispatchEvent(event1);
+        } 
+    });
+}
+buttonEvent(undoButton,displayList,redoStack);
+buttonEvent(redoButton,redoStack,displayList);
 const thinButton = newButton("🖋️");
 thinButton.addEventListener("click", function () {
     cursor = "🖋️";
