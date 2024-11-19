@@ -119,8 +119,8 @@ button:focus-visible {
 
   filter: drop-shadow(1px 1px 2px #000000);
   position: absolute;
-  left: 28.5%;
-  bottom: 24.5%;
+  left: 15%;
+  bottom: 20%;
 }
 .slider-container {
   display: flex;
