@@ -104,23 +104,47 @@ button:hover {
   gap: 10px;
   padding: 2rem;
   position: absolute;
+  left: 5%;
+  top: 35%;
+}
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 2rem;
+  position: absolute;
   right: 5%;
-  top: 0;
+  top: 35%;
+}
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 2rem;
+  position: absolute;
+  left: 5%;
+  top: 35%;
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 .color-box {
-  width: 50px;
-  height: 50px;
+  width: 100px;
+  height: 100px;
   background-color: var(--dynamic-color);
   border-radius: 70%;
-  position: relative;
   filter: drop-shadow(1px 1px 2px #000000);
   position: absolute;
-  left: 28.5%;
-  bottom: 4%;
+  left: 13%;
+  top: 20%;
+  font-size: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  color: white;
+  -webkit-text-stroke: 0.5px black;
 }
 .slider-container {
   display: flex;
@@ -129,11 +153,11 @@ button:focus-visible {
   padding: 2rem;
   position: absolute;
   left: 0;
-  bottom: 0;
+  top: 3%;
 }
 
 .slider {
-  width: 380px;
+  width: 440px;
   height: 10px;
   -webkit-appearance: none;
   appearance: none;
